@@ -51,6 +51,10 @@ export const getProducts = async (req, res) => {
     }
 };
 
+
+// UPDATE PRODUCT DETAILS
+
+
 //Get product by owner
 export const getProductsByOwner = async (req, res) => {
   try {
@@ -64,44 +68,85 @@ export const getProductsByOwner = async (req, res) => {
 };
 
 
-/*
+
 
 // ✅ UPDATE PRODUCT
+// controllers/productController.js
+
 export const updateProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, price, quantity, description, price_BCN, register, expiry } = req.body;
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      price,
+      quantity,
+      description,
+      price_BCN,
+      register,
+      expiry
+    } = req.body;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'Invalid product ID' });
-        }
-
-        // ✅ Word count validation (same as create)
-        if (description) {
-            const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
-            if (wordCount < 5 || wordCount > 200) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Description must be between 5 and 200 words.'
-                });
-            }
-        }
-
-        const updatedProduct = await Product.findByIdAndUpdate(
-            id,
-            { name, price, quantity, description, price_BCN, register, expiry },
-            { new: true }
-        );
-
-        if (!updatedProduct) {
-            return res.status(404).json({ success: false, message: 'Product not found' });
-        }
-
-        return res.status(200).json({ success: true, message: 'Product updated successfully', product: updatedProduct });
-    } catch (error) {
-        console.error("Update Product Error:", error);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
+    // Validate product ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid product ID'
+      });
     }
+
+    // Validate description word count
+    if (description) {
+      const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
+      if (wordCount < 5 || wordCount > 200) {
+        return res.status(400).json({
+          success: false,
+          message: 'Description must be between 5 and 200 words.'
+        });
+      }
+    }
+
+    // Prepare update data
+    const updateData = {
+      name,
+      price,
+      quantity,
+      description,
+      price_BCN,
+      register,
+      expiry
+    };
+
+    // Handle uploaded images
+    if (req.files && req.files.length > 0) {
+      const photos = req.files.map(file => file.filename);
+      updateData.photos = photos; // Assuming your model supports `photos` array
+    }
+
+    // Update the product
+    const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
+      new: true
+    });
+
+    if (!updatedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product: updatedProduct
+    });
+
+  } catch (error) {
+    console.error("Update Product Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
 };
 
 
@@ -126,4 +171,4 @@ export const deleteProduct = async (req, res) => {
         console.error("Delete Product Error:", error);
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
-};*/
+};
