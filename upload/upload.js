@@ -24,3 +24,4 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 export default upload;
+export const uploadMultiple = upload.array('image', 6); // 👈 must match input field `name="images"`
