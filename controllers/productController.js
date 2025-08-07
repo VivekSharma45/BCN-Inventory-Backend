@@ -5,10 +5,10 @@ import mongoose from "mongoose";
 // ✅ CREATE PRODUCT
 export const createProduct = async (req, res) => {
     try {
-        const { name, price, quantity, description, price_BCN, register, expiry, owner_name, unit } = req.body;
+        const { name, price, quantity, description, price_BCN, register, expiry, owner_name, unit ,product_quantity } = req.body;
         const image = req.files ? req.files.map(file => file.filename) : [];
 
-        if (!name || !price || !quantity || !description || !price_BCN || !register || !expiry || !owner_name || !image || !unit) {
+        if (!name || !price || !quantity || !description || !price_BCN || !register || !expiry || !owner_name || !image || !unit || !product_quantity) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
@@ -37,6 +37,7 @@ export const createProduct = async (req, res) => {
             expiry,
             image,
             owner_name,
+            product_quantity,
             unit,
             owner_id: owner._id  // ✅ Use Mongo-generated ObjectId
         });
@@ -98,7 +99,7 @@ export const getProductsByOwner = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, price, quantity, description, price_BCN, register, expiry } = req.body;
+        const { name, price, quantity, description, price_BCN, register, expiry , product_quantity ,unit} = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: 'Invalid product ID' });
@@ -115,10 +116,12 @@ export const updateProduct = async (req, res) => {
             name,
             price,
             quantity,
+            unit,
             description,
             price_BCN,
             register,
-            expiry
+            expiry,
+            product_quantity,
         };
 
         if (req.files && req.files.length > 0) {

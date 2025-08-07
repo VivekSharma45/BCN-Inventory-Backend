@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema({
     quantity: { type: Number, required: true },
     unit: { type: String, enum: [ 'kg', 'liter', 'piece', 'packet', 'box' ], required: true },
     price_BCN: { type: Number, required: true },
+    product_quantity: { type : Number, required: true},
     register: { type: String, required: true },
     expiry: { type: String, required: true },
     owner_name: { type: String, required: true },

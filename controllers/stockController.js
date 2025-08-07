@@ -4,19 +4,19 @@ import StockOut from "../models/stockOutModel.js";
 
 export const stockIn = async (req, res) => {
   try {
-    const { product_id, quantity, unit, note } = req.body;
+    const { product_id, quantity, unit, note, product_quantity } = req.body;
 
-    if (!product_id || !quantity ||!unit) {
+    if (!product_id || !quantity ||!unit || !product_quantity) {
       return res.status(400).json({ success: false, message: "Product ID and Quantity required" });
     }
 
     const product = await Product.findById(product_id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
-    product.quantity += Number(quantity);
+    product.product_quantity += Number(product_quantity);
     await product.save();
 
-    await StockIn.create({ product_id, quantity, unit, note });
+    await StockIn.create({ product_id, quantity, unit, note , product_quantity });
 
     res.status(200).json({ success: true, message: "Stock In recorded successfully" });
   } catch (err) {
@@ -27,23 +27,23 @@ export const stockIn = async (req, res) => {
 
 export const stockOut = async (req, res) => {
   try {
-    const { product_id, quantity, unit, note } = req.body;
+    const { product_id, quantity, unit, note , product_quantity } = req.body;
 
-    if (!product_id || !quantity ||!unit) {
+    if (!product_id || !quantity ||!unit || !product_quantity) {
       return res.status(400).json({ success: false, message: "Product ID and Quantity required" });
     }
 
     const product = await Product.findById(product_id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
-    if (product.quantity < quantity) {
+    if (product.product_quantity < product_quantity) {
       return res.status(400).json({ success: false, message: "Insufficient stock" });
     }
 
-    product.quantity -= Number(quantity);
+    product.product_quantity -= Number(product_quantity);
     await product.save();
 
-    await StockOut.create({ product_id, quantity, unit, note });
+    await StockOut.create({ product_id, quantity, unit, note , product_quantity});
 
     res.status(200).json({ success: true, message: "Stock Out recorded successfully" });
   } catch (err) {
@@ -81,7 +81,7 @@ export const getLowStock = async (req, res) => {
 
   try {
     const threshold = parseInt(req.query.threshold) || 10;
-    const products = await Product.find({ quantity: { $lt: threshold } });
+    const products = await Product.find({ product_quantity: { $lt: threshold } });
 
     res.status(200).json({
       success: true,
