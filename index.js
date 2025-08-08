@@ -24,5 +24,5 @@ app.use('/upload', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/owner', ownerRoutes);
 app.listen(process.env.PORT ||5000, () => {
     connectDB(); 
-    console.log(`Server is running on http://localhost:${process.env.PORT || 5000}`);
+    console.log(`Server is running on http://bcn-inventory-backend.vercel.app:${process.env.PORT || 5000}`);
 })
