@@ -17,7 +17,7 @@ export const stockIn = async (req, res) => {
     await product.save();
 
     await StockIn.create({ product_id, quantity, unit, note , product_quantity });
-
+    
     res.status(200).json({ success: true, message: "Stock In recorded successfully" });
   } catch (err) {
     console.error("Stock in error:", err);
