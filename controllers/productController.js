@@ -1,12 +1,25 @@
 import Product from "../models/product.js";
 import Owner from "../models/owner.js";
 import mongoose from "mongoose";
+import { deleteMultipleImagesFromCloudinary } from "../utils/cloudinaryUtils.js";
 
 // ✅ CREATE PRODUCT
 export const createProduct = async (req, res) => {
     try {
         const { name, price, quantity, description, price_BCN, register, expiry, owner_name, unit ,product_quantity } = req.body;
-        const image = req.files ? req.files.map(file => file.filename) : [];
+        
+        // Handle both Cloudinary URLs and local filenames
+        let image = [];
+        if (req.files && req.files.length > 0) {
+            image = req.files.map(file => {
+                // If it's a Cloudinary URL (starts with http), use it directly
+                if (file.path && file.path.startsWith('http')) {
+                    return file.path;
+                }
+                // If it's a local filename, construct the full URL
+                return `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
+            });
+        }
 
         if (!name || !price || !quantity || !description || !price_BCN || !register || !expiry || !owner_name || !image || !unit || !product_quantity) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
@@ -125,7 +138,14 @@ export const updateProduct = async (req, res) => {
         };
 
         if (req.files && req.files.length > 0) {
-            const image = req.files.map(file => file.filename);
+            const image = req.files.map(file => {
+                // If it's a Cloudinary URL (starts with http), use it directly
+                if (file.path && file.path.startsWith('http')) {
+                    return file.path;
+                }
+                // If it's a local filename, construct the full URL
+                return `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
+            });
             updateData.image = image;
         }
 
@@ -155,6 +175,19 @@ export const deleteProduct = async (req, res) => {
 
         if (!deletedProduct) {
             return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Delete images from Cloudinary (only if they are Cloudinary URLs)
+        if (deletedProduct.image && deletedProduct.image.length > 0) {
+            try {
+                const cloudinaryUrls = deletedProduct.image.filter(url => url && url.startsWith('http'));
+                if (cloudinaryUrls.length > 0) {
+                    await deleteMultipleImagesFromCloudinary(cloudinaryUrls);
+                }
+            } catch (error) {
+                console.error('Error deleting images from Cloudinary:', error);
+                // Continue with deletion even if Cloudinary deletion fails
+            }
         }
 
         return res.status(200).json({ success: true, message: 'Product deleted successfully' });

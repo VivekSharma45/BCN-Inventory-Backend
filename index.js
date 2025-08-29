@@ -29,7 +29,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/owner', ownerRoutes);
 
-// ✅ Static file serving (uploads)
+// ✅ Static file serving (uploads) - For local storage fallback
 app.use('/upload', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ Start server
