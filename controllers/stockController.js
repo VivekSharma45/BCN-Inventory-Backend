@@ -6,7 +6,7 @@ export const stockIn = async (req, res) => {
   try {
     const { product_id, quantity, unit, note, product_quantity } = req.body;
 
-    if (!product_id || !quantity ||!unit || !product_quantity) {
+    if (!product_id || !product_quantity) {
       return res.status(400).json({ success: false, message: "Product ID and Quantity required" });
     }
 
@@ -29,7 +29,7 @@ export const stockOut = async (req, res) => {
   try {
     const { product_id, quantity, unit, note , product_quantity } = req.body;
 
-    if (!product_id || !quantity ||!unit || !product_quantity) {
+    if (!product_id || !product_quantity) {
       return res.status(400).json({ success: false, message: "Product ID and Quantity required" });
     }
 
