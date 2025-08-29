@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema({
     unit: { type: String, enum: [ 'kg', 'liter', 'piece', 'packet', 'box' ]},
     price_BCN: { type: Number},
     product_quantity: { type : Number, required: true},
-    register: { type: String, required: true },
+    register: { type: String },
     expiry: { type: String},
     owner_name: { type: String, required: true },
     description: { type: String, required: true },
@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema({
         ref: 'Owner', // ✅ Correct reference model
         required: true
     },
-    image: { type: [String], default:[], required: true },
+    image: { type: [String], default:[] },
 }, { timestamps: true });
 
 const Product = mongoose.model("Product", productSchema);

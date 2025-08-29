@@ -10,25 +10,34 @@ export const createProduct = async (req, res) => {
         
         // Handle image uploads
         let image = [];
+        console.log('📁 Files received:', req.files ? req.files.length : 0);
+        
         if (req.files && req.files.length > 0) {
             image = req.files.map(file => {
+                console.log('📄 Processing file:', {
+                    originalname: file.originalname,
+                    path: file.path,
+                    filename: file.filename,
+                    mimetype: file.mimetype
+                });
+                
                 // If it's a Cloudinary URL (starts with http), use it directly
                 if (file.path && file.path.startsWith('http')) {
+                    console.log('✅ Cloudinary URL detected:', file.path);
                     return file.path;
                 }
-                // If it's a local filename, construct the full URL for local development
-                // For production, this should always be a Cloudinary URL
-                if (process.env.NODE_ENV === 'production') {
-                    console.warn('⚠️ Local file upload detected in production environment');
-                    // In production, we should always use Cloudinary
-                    return file.path; // This should be a Cloudinary URL
-                }
-                return `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
+                
+                // If it's a local filename, construct the full URL
+                const localUrl = `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
+                console.log('📂 Local URL constructed:', localUrl);
+                return localUrl;
             });
         }
+        
+        console.log('🖼️ Final image array:', image);
 
-        if (!name || !price || !quantity || !description || !price_BCN || !register || !expiry || !owner_name || !image || !unit || !product_quantity) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
+        if (!name || !price || !description || !owner_name || !product_quantity) {
+            return res.status(400).json({ success: false, message: 'Name, price, description, owner name, and product quantity are required' });
         }
 
         const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
@@ -49,15 +58,15 @@ export const createProduct = async (req, res) => {
         const newProduct = new Product({
             name,
             price,
-            quantity,
+            quantity: quantity || undefined,
             description,
-            price_BCN,
-            register,
-            expiry,
-            image,
+            price_BCN: price_BCN || undefined,
+            register: register || undefined,
+            expiry: expiry || undefined,
+            image: image.length > 0 ? image : [],
             owner_name,
             product_quantity,
-            unit,
+            unit: unit || undefined,
             owner_id: owner._id  // ✅ Use Mongo-generated ObjectId
         });
 

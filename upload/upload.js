@@ -20,6 +20,12 @@ let storage;
 
 if (isCloudinaryConfigured()) {
   console.log('✅ Cloudinary configured - using Cloudinary storage');
+  console.log('Cloudinary Config:', {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY ? '***' + process.env.CLOUDINARY_API_KEY.slice(-4) : 'Not Set',
+    api_secret: process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : 'Not Set'
+  });
+  
   // Configure Cloudinary storage
   storage = new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -29,22 +35,24 @@ if (isCloudinaryConfigured()) {
       transformation: [
         { width: 800, height: 600, crop: 'limit' },
         { quality: 'auto' }
-      ]
+      ],
+      resource_type: 'auto'
     }
   });
 } else {
-  // In production, we should always use Cloudinary
+
+  // Cloudinary not configured - use local storage with warning
   if (process.env.NODE_ENV === 'production') {
-    console.error('❌ Cloudinary not configured in production environment!');
-    console.error('Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.');
-    process.exit(1);
+    console.warn('⚠️ Cloudinary not configured in production environment!');
+    console.warn('Using local storage as fallback. Please configure Cloudinary for better performance.');
+  } else {
+    console.log('⚠️ Cloudinary not configured - using local storage (development only)');
   }
   
-  console.log('⚠️ Cloudinary not configured - using local storage (development only)');
-  // Fallback to local storage (development only)
+  // Fallback to local storage
   const uploadPath = path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath);
+    fs.mkdirSync(uploadPath, { recursive: true });
   }
   
   storage = multer.diskStorage({
