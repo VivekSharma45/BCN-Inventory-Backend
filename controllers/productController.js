@@ -8,7 +8,7 @@ export const createProduct = async (req, res) => {
     try {
         const { name, price, quantity, description, price_BCN, register, expiry, owner_name, unit ,product_quantity } = req.body;
         
-        // Handle both Cloudinary URLs and local filenames
+        // Handle image uploads
         let image = [];
         if (req.files && req.files.length > 0) {
             image = req.files.map(file => {
@@ -16,7 +16,13 @@ export const createProduct = async (req, res) => {
                 if (file.path && file.path.startsWith('http')) {
                     return file.path;
                 }
-                // If it's a local filename, construct the full URL
+                // If it's a local filename, construct the full URL for local development
+                // For production, this should always be a Cloudinary URL
+                if (process.env.NODE_ENV === 'production') {
+                    console.warn('⚠️ Local file upload detected in production environment');
+                    // In production, we should always use Cloudinary
+                    return file.path; // This should be a Cloudinary URL
+                }
                 return `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
             });
         }

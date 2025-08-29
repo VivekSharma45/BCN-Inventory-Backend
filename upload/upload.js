@@ -33,8 +33,15 @@ if (isCloudinaryConfigured()) {
     }
   });
 } else {
-  console.log('⚠️ Cloudinary not configured - using local storage');
-  // Fallback to local storage
+  // In production, we should always use Cloudinary
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ Cloudinary not configured in production environment!');
+    console.error('Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.');
+    process.exit(1);
+  }
+  
+  console.log('⚠️ Cloudinary not configured - using local storage (development only)');
+  // Fallback to local storage (development only)
   const uploadPath = path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath);
