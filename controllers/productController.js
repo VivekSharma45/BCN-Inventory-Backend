@@ -118,7 +118,10 @@ export const getProductsByOwner = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, price, quantity, description, price_BCN, register, expiry , product_quantity ,unit} = req.body;
+        const { name, price, quantity, description, price_BCN, register, expiry, product_quantity, unit } = req.body;
+
+        console.log('Update Product Request Body:', req.body);
+        console.log('Update Product Files:', req.files);
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: 'Invalid product ID' });
@@ -131,31 +134,59 @@ export const updateProduct = async (req, res) => {
             }
         }
 
+        // First, get the existing product to preserve required fields
+        const existingProduct = await Product.findById(id);
+        if (!existingProduct) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
         const updateData = {
-            name,
-            price,
-            quantity,
-            unit,
-            description,
-            price_BCN,
-            register,
-            expiry,
-            product_quantity,
+            name: name || existingProduct.name,
+            price: price || existingProduct.price,
+            quantity: quantity || existingProduct.quantity,
+            unit: unit || existingProduct.unit,
+            description: description || existingProduct.description,
+            price_BCN: price_BCN || existingProduct.price_BCN,
+            register: register || existingProduct.register,
+            expiry: expiry || existingProduct.expiry,
+            product_quantity: product_quantity || existingProduct.product_quantity,
+            owner_name: existingProduct.owner_name, // Preserve existing owner_name
+            owner_id: existingProduct.owner_id, // Preserve existing owner_id
         };
 
+        // Handle images: combine existing images with new uploaded images
+        let allImages = [];
+        
+        // Start with existing images from the database
+        if (existingProduct.image && existingProduct.image.length > 0) {
+            allImages = allImages.concat(existingProduct.image);
+        }
+        
+        // Add new uploaded images
         if (req.files && req.files.length > 0) {
-            const image = req.files.map(file => {
+            const newImages = req.files.map(file => {
                 // If it's a Cloudinary URL (starts with http), use it directly
                 if (file.path && file.path.startsWith('http')) {
                     return file.path;
                 }
                 // If it's a local filename, construct the full URL
+                if (process.env.NODE_ENV === 'production') {
+                    console.warn('⚠️ Local file upload detected in production environment');
+                    return file.path; // This should be a Cloudinary URL
+                }
                 return `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
             });
-            updateData.image = image;
+            allImages = allImages.concat(newImages);
+        }
+        
+        // Only update images if we have any images to set
+        if (allImages.length > 0) {
+            updateData.image = allImages;
         }
 
-        const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true });
+        console.log('Final Update Data:', updateData);
+
+        const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 
         if (!updatedProduct) {
             return res.status(404).json({ success: false, message: 'Product not found' });
@@ -164,7 +195,7 @@ export const updateProduct = async (req, res) => {
         return res.status(200).json({ success: true, message: 'Product updated successfully', product: updatedProduct });
     } catch (error) {
         console.error("Update Product Error:", error);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
+        return res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
     }
 };
 
